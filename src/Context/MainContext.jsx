@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import {
   checkIfWalletIsConnect,
   connectMetamask,
+  NoProviderDetectedError
 } from "../Utils/connectMetamask";
 import {
   createCampaign,
@@ -10,6 +11,7 @@ import {
   getUserCampaigns,
 } from "../Utils/CampaignManager";
 import { getCampaignDetail } from "../Utils/CampaignContract";
+import { toast } from 'react-toastify';
 
 export const MainContext = createContext();
 
@@ -18,7 +20,14 @@ export const MainProvider = ({ children }) => {
 
   // connect to metamask
   const connectMetamaskWithAccount = async () => {
-    const { provider } = await connectMetamask();
+    const { provider } = await connectMetamask().catch((err) => {
+      if (err instanceof NoProviderDetectedError) {
+        toast.error("No Metamask detected. Please install Metamask to continue.")
+      }
+
+      throw err;
+    });
+
     const accounts = await provider.send("eth_requestAccounts", []);
     setAccount(accounts[0]);
     window.location.reload();
